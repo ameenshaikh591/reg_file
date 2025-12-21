@@ -1,0 +1,49 @@
+xrun(64): 25.03-s003: (c) Copyright 1995-2025 Cadence Design Systems, Inc.
+TOOL:	xrun(64)	25.03-s003: Started on Dec 21, 2025 at 17:44:37 EST
+xrun
+	-sv
+	reg_file_tb.sv
+	reg_file.sv
+Recompiling... reason: file './reg_file_tb.sv' is newer than expected.
+	expected: Sun Dec 21 17:43:00 2025
+	actual:   Sun Dec 21 17:44:32 2025
+file: reg_file_tb.sv
+	module worklib.reg_file_tb:sv
+		errors: 0, warnings: 0
+		Caching library 'worklib' ....... Done
+	Elaborating the design hierarchy:
+	Top level design units:
+		reg_file_tb
+	Building instance overlay tables: .................... Done
+	Generating native compiled code:
+		worklib.reg_file_tb:sv <0x2ad1800c>
+			streams:  15, words: 10617
+	Building instance specific data structures.
+	Loading native compiled code:     .................... Done
+	Design hierarchy summary:
+		                 Instances  Unique
+		Modules:                 2       2
+		Registers:              31      31
+		Scalar wires:            2       -
+		Vectored wires:          8       -
+		Always blocks:           2       2
+		Initial blocks:          2       2
+		Clocking blocks:         1       1
+		Clocking items:          3       3
+		Pseudo assignments:      3       -
+		Process Clocks:          1       1
+		Simulation timescale:  1ns
+	Writing initial simulation snapshot: worklib.reg_file_tb:sv
+Loading snapshot worklib.reg_file_tb:sv .................... Done
+xcelium> source /tools/software/cadence/xcelium/latest/tools/xcelium/files/xmsimrc
+xcelium> run
+xmsim: *W,DVEXACC: some objects excluded from $dumpvars due to access restrictions, use +access+r on command line for access to all objects.
+            File: ./reg_file_tb.sv, line = 133, pos = 12
+           Scope: reg_file_tb
+            Time: 0 FS + 0
+
+ALL TESTS PASSED
+Simulation complete via $finish(1) at time 89 NS + 0
+./reg_file_tb.sv:140     $finish;
+xcelium> exit
+TOOL:	xrun(64)	25.03-s003: Exiting on Dec 21, 2025 at 17:44:38 EST  (total: 00:00:01)
