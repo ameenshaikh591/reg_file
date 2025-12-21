@@ -1,0 +1,27 @@
+# Simulator waveforms
+*.vcd
+*.fst
+*.wlf
+*.shm
+*.trn
+*.dsn
+
+# Compilation outputs
+*.o
+*.out
+*.log
+
+# Simulator directories
+xsim.dir/
+work/
+simv/
+csrc/
+INCA_libs/
+
+# Tool-specific
+*.jou
+*.pb
+*.xml
+
+# OS junk
+.DS_Store
