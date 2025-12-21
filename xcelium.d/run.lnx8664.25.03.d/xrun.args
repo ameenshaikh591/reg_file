@@ -1,7 +1,0 @@
-//
-// File created by:  xrun
-// Do not modify this file
-//
--sv
-reg_file_tb.sv
-reg_file.sv

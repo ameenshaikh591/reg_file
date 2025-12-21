@@ -17,6 +17,8 @@ work/
 simv/
 csrc/
 INCA_libs/
+.simvision/
+xcelium.d/
 
 # Tool-specific
 *.jou
