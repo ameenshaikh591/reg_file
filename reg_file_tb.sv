@@ -1,20 +1,20 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 `define CLOCK_HALF_PERIOD 5ns
 
 module reg_file_tb;
 
   localparam int ADDR_WIDTH = 3;
-  localparam int REG_WIDTH  = 32;
-  localparam int NUM_REGS   = 1 << ADDR_WIDTH;
+  localparam int REG_WIDTH = 32;
+  localparam int NUM_REGS = 1 << ADDR_WIDTH;
 
   // Port signals
   logic i_clk;
   logic [ADDR_WIDTH-1:0] i_reg_a_addr_r, i_reg_b_addr_r;
   logic [ADDR_WIDTH-1:0] i_reg_addr_w;
-  logic [REG_WIDTH-1:0]  i_reg_val_w;
-  logic                  i_write_en;
-  logic [REG_WIDTH-1:0]  o_reg_a_val_r, o_reg_b_val_r;
-  logic [REG_WIDTH-1:0]  reg_val;
+  logic [REG_WIDTH-1:0] i_reg_val_w;
+  logic i_write_en;
+  logic [REG_WIDTH-1:0] o_reg_a_val_r, o_reg_b_val_r;
+  logic [REG_WIDTH-1:0] reg_val;
 
   // DUT
   reg_file #(
@@ -31,7 +31,6 @@ module reg_file_tb;
     .o_reg_b_val_r(o_reg_b_val_r)
   );
 
-  // Clock
   initial begin
     i_clk = 0;
     forever begin
@@ -40,21 +39,17 @@ module reg_file_tb;
     end
   end
 
-  // Clocking block: ONLY the synchronous write-side
   clocking cb @(posedge i_clk);
     default input #1ns output #1ns;
     output i_reg_addr_w, i_reg_val_w, i_write_en;
   endclocking
 
-  // -------------------------
-  // Read tasks (combinational)
-  // -------------------------
   task automatic read_reg_a(
-      input  int reg_num,
-      output logic [REG_WIDTH-1:0] val
+    input  int reg_num,
+    output logic [REG_WIDTH-1:0] val
   );
     i_reg_a_addr_r = reg_num[ADDR_WIDTH-1:0];
-    #1; // allow combinational settle
+    #1; // Small propagation delay
     val = o_reg_a_val_r;
   endtask
 
@@ -63,13 +58,14 @@ module reg_file_tb;
       output logic [REG_WIDTH-1:0] val
   );
     i_reg_b_addr_r = reg_num[ADDR_WIDTH-1:0];
-    #1;
+    #1; // Small propagation delay
     val = o_reg_b_val_r;
   endtask
 
+  // Read register a and register b simultaneously
   task automatic read_reg_a_b(
-    input  int reg_a_num,
-    input  int reg_b_num,
+    input int reg_a_num,
+    input int reg_b_num,
     output logic [REG_WIDTH-1:0] a_val,
     output logic [REG_WIDTH-1:0] b_val
   );
@@ -84,11 +80,12 @@ module reg_file_tb;
     input int reg_num,
     input logic [REG_WIDTH-1:0] val
   );
+    @cb;
     cb.i_reg_addr_w <= reg_num[ADDR_WIDTH-1:0];
-    cb.i_reg_val_w  <= val;
-    cb.i_write_en   <= 1'b1;
-    @cb;                 // write happens on this edge
-    cb.i_write_en   <= 1'b0;
+    cb.i_reg_val_w <= val;
+    cb.i_write_en <= 1'b1;
+    @cb;
+    cb.i_write_en <= 1'b0;
   endtask
 
   task automatic verify_reg_val(
@@ -112,8 +109,68 @@ module reg_file_tb;
 
     for (int i = 0; i < NUM_REGS; i += 2) begin
       read_reg_a_b(i, i+1, reg_a_val, reg_b_val);
-      verify_reg_val(i,   REG_WIDTH'(i),   reg_a_val);
+      verify_reg_val(i, REG_WIDTH'(i), reg_a_val);
       verify_reg_val(i+1, REG_WIDTH'(i+1), reg_b_val);
+    end
+  endtask
+
+  task automatic test_read_write_reg_a();
+    int test_reg_num = 2;
+    int test_reg_val = 23;
+    // Writing to register
+    @cb;
+    cb.i_reg_addr_w <= test_reg_num;
+    cb.i_reg_val_w <= test_reg_val;
+    cb.i_write_en <= 1'b1;
+
+    // Reading from register
+    i_reg_a_addr_r = test_reg_num;
+
+    // Propagation delay
+    #1.5;
+
+    if (test_reg_val != o_reg_a_val_r) begin
+      $error("[ERROR]: expected=%0h, actual=%0h, register %0d", test_reg_val, o_reg_a_val_r, test_reg_num);
+      $fatal;
+    end
+
+    // Complete write sequence by deasserting "i_write_en"
+    @cb;
+    cb.i_write_en <= 1'b0;
+
+    if (test_reg_val != o_reg_a_val_r) begin
+      $error("[ERROR]: expected=%0h, actual=%0h, register %0d", test_reg_val, o_reg_a_val_r, test_reg_num);
+      $fatal;
+    end
+  endtask
+
+  task automatic test_read_write_reg_b();
+    int test_reg_num = 4;
+    int test_reg_val = 67;
+    // Writing to register
+    @cb;
+    cb.i_reg_addr_w <= test_reg_num;
+    cb.i_reg_val_w <= test_reg_val;
+    cb.i_write_en <= 1'b1;
+
+    // Reading from register
+    i_reg_b_addr_r = test_reg_num;
+
+    // Propagation delay
+    #1.5;
+
+    if (test_reg_val != o_reg_b_val_r) begin
+      $error("[ERROR]: expected=%0h, actual=%0h, register %0d", test_reg_val, o_reg_b_val_r, test_reg_num);
+      $fatal;
+    end
+
+    // Complete write sequence by deasserting "i_write_en"
+    @cb;
+    cb.i_write_en <= 1'b0;
+
+    if (test_reg_val != o_reg_b_val_r) begin
+      $error("[ERROR]: expected=%0h, actual=%0h, register %0d", test_reg_val, o_reg_b_val_r, test_reg_num);
+      $fatal;
     end
   endtask
 
@@ -123,7 +180,7 @@ module reg_file_tb;
 
     cb.i_write_en <= 1'b0;
     cb.i_reg_addr_w <= '0;
-    cb.i_reg_val_w  <= '0;
+    cb.i_reg_val_w <= '0;
 
     @cb;
   endtask
@@ -136,8 +193,15 @@ module reg_file_tb;
 
 
     // Tests
+    //
+    //
     test_write_read_all_regs();
-    
+    test_read_write_reg_a();
+    test_read_write_reg_b();
+
+    //
+    //
+    //
     $display("ALL TESTS PASSED");
 
     $finish;
