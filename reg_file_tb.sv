@@ -40,7 +40,7 @@ module reg_file_tb;
   end
 
   clocking cb @(posedge i_clk);
-    default input #1ns output #1ns;
+    default input #1ns output #1ns; // Signals change 1ns after posedge of i_clk
     output i_reg_addr_w, i_reg_val_w, i_write_en;
   endclocking
 
@@ -117,17 +117,16 @@ module reg_file_tb;
   task automatic test_read_write_reg_a();
     int test_reg_num = 2;
     int test_reg_val = 23;
+
     // Writing to register
     @cb;
     cb.i_reg_addr_w <= test_reg_num;
     cb.i_reg_val_w <= test_reg_val;
-    cb.i_write_en <= 1'b1;
+    cb.i_write_en <= '1;
 
-    // Reading from register
-    i_reg_a_addr_r = test_reg_num;
+    i_reg_a_addr_r = test_reg_num; // Reading from register
 
-    // Propagation delay
-    #1.5;
+    #2; // Propagation delay (1ns to let i_write_en change after posedge, 1ns as combinational delay)
 
     if (test_reg_val != o_reg_a_val_r) begin
       $error("[ERROR]: expected=%0h, actual=%0h, register %0d", test_reg_val, o_reg_a_val_r, test_reg_num);
@@ -136,7 +135,7 @@ module reg_file_tb;
 
     // Complete write sequence by deasserting "i_write_en"
     @cb;
-    cb.i_write_en <= 1'b0;
+    cb.i_write_en <= '0;
 
     if (test_reg_val != o_reg_a_val_r) begin
       $error("[ERROR]: expected=%0h, actual=%0h, register %0d", test_reg_val, o_reg_a_val_r, test_reg_num);
@@ -151,13 +150,12 @@ module reg_file_tb;
     @cb;
     cb.i_reg_addr_w <= test_reg_num;
     cb.i_reg_val_w <= test_reg_val;
-    cb.i_write_en <= 1'b1;
+    cb.i_write_en <= '1;
 
     // Reading from register
     i_reg_b_addr_r = test_reg_num;
 
-    // Propagation delay
-    #1.5;
+    #2; // Propagation delay (1ns to let i_write_en change after posedge, 1ns as combinational delay)
 
     if (test_reg_val != o_reg_b_val_r) begin
       $error("[ERROR]: expected=%0h, actual=%0h, register %0d", test_reg_val, o_reg_b_val_r, test_reg_num);
@@ -166,7 +164,7 @@ module reg_file_tb;
 
     // Complete write sequence by deasserting "i_write_en"
     @cb;
-    cb.i_write_en <= 1'b0;
+    cb.i_write_en <= '0;
 
     if (test_reg_val != o_reg_b_val_r) begin
       $error("[ERROR]: expected=%0h, actual=%0h, register %0d", test_reg_val, o_reg_b_val_r, test_reg_num);
@@ -186,23 +184,18 @@ module reg_file_tb;
   endtask
 
   initial begin
-    $dumpfile("reg_file.vcd");
-    $dumpvars(0, reg_file_tb);
+    // Waveforms
+    //$dumpfile("reg_file.vcd");
+    //$dumpvars(0, reg_file_tb);
 
-    initialize_inputs();
-
+    initialize_inputs(); // Set-up
 
     // Tests
-    //
-    //
     test_write_read_all_regs();
     test_read_write_reg_a();
     test_read_write_reg_b();
 
-    //
-    //
-    //
-    $display("ALL TESTS PASSED");
+    $display("[INFO]: ALL TESTS PASSED");
 
     $finish;
   end

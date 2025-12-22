@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 
 module reg_file #(
     parameter int REG_WIDTH = 32,
@@ -6,19 +6,19 @@ module reg_file #(
 ) (
     input logic i_clk,
 
-    input logic [ADDR_WIDTH - 1 : 0] i_reg_a_addr_r,
-    input logic [ADDR_WIDTH - 1 : 0] i_reg_b_addr_r,
+    input logic [ADDR_WIDTH-1:0] i_reg_a_addr_r,
+    input logic [ADDR_WIDTH-1:0] i_reg_b_addr_r,
 
-    input logic [ADDR_WIDTH - 1 : 0] i_reg_addr_w,
-    input logic [REG_WIDTH - 1 : 0] i_reg_val_w,
+    input logic [ADDR_WIDTH-1:0] i_reg_addr_w,
+    input logic [REG_WIDTH-1:0] i_reg_val_w,
     input logic i_write_en,
 
-    output logic [REG_WIDTH - 1 : 0] o_reg_a_val_r,
-    output logic [REG_WIDTH - 1 : 0] o_reg_b_val_r
+    output logic [REG_WIDTH-1:0] o_reg_a_val_r,
+    output logic [REG_WIDTH-1:0] o_reg_b_val_r
 );
     localparam int NUM_REGS = 1 << ADDR_WIDTH;
 
-    logic [REG_WIDTH - 1 : 0] registers [NUM_REGS - 1 : 0];
+    logic [REG_WIDTH-1:0] registers [NUM_REGS-1:0];
     logic same_a_write_addr; // Assert if a's address is the same as write's address
     logic same_b_write_addr; // Assert if b's address is the same as write's address
 
